@@ -1,0 +1,537 @@
+```html
+<!DOCTYPE html>
+<html lang="ko" class="h-full overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리반 타이머 (21명)</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for friendly typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Gaegu', 'Nunito', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #fef9c3 0%, #dbeafe 100%);
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kids-font {
+            font-family: 'Gaegu', cursive;
+        }
+        .character-card {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .character-card:active {
+            transform: scale(0.95);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="p-1 md:p-2 text-slate-800">
+
+    <div class="w-full max-w-7xl h-[98dvh] max-h-[98dvh] bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-yellow-300 p-2 flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- Background decorative elements -->
+        <div class="absolute top-2 left-4 text-sky-200/40 text-4xl pointer-events-none"><i class="fa-solid fa-cloud"></i></div>
+        <div class="absolute top-8 right-12 text-pink-200/40 text-5xl pointer-events-none animate-bounce" style="animation-duration: 4s;"><i class="fa-solid fa-cloud"></i></div>
+
+        <!-- Header Panel with Editable Title -->
+        <div class="flex flex-col items-center justify-center gap-0.5 pb-0.5 z-10 w-full text-center flex-shrink-0">
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex items-center gap-2 justify-center">
+                    <span class="text-2xl md:text-3xl animate-bounce" style="animation-duration: 3s;">🌤️</span>
+                    <h1 id="class-title-display" class="text-2xl md:text-4xl font-bold text-yellow-600 tracking-wide kids-font">신나는 ㅇㅇ반 타이머</h1>
+                    <button onclick="editClassTitle()" title="반 이름 수정" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-2 py-0.5 rounded-xl text-xs font-bold border border-yellow-300 transition active:scale-95">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <span class="text-2xl md:text-3xl animate-bounce" style="animation-duration: 3s; animation-delay: 0.5s;">🌤️</span>
+                </div>
+                <p class="text-[10px] md:text-xs text-slate-400 font-bold">💡 입력한 명단과 동물 설정은 자동으로 저장됩니다!</p>
+            </div>
+        </div>
+
+        <!-- Setup Screen Panel -->
+        <div id="setup-panel" class="z-10 flex flex-col gap-1 flex-shrink-0">
+            <div class="bg-yellow-50 rounded-2xl p-1.5 border border-yellow-150 flex flex-col md:flex-row gap-2 items-center justify-between shadow-sm">
+                <!-- Timer Settings -->
+                <div class="flex flex-col gap-0.5 w-full md:w-auto">
+                    <span class="text-xs font-bold text-slate-600 flex items-center gap-2 justify-center md:justify-start">
+                        ⏱️ 활동 시간을 정해주세요:
+                    </span>
+                    <div class="flex items-center gap-1.5 justify-center">
+                        <div class="flex items-center bg-white rounded-lg border-2 border-yellow-200 p-0.5 shadow-inner">
+                            <input type="number" id="input-min" value="10" min="0" max="99" class="w-9 text-center text-base font-bold text-slate-700 focus:outline-none">
+                            <span class="text-xs font-bold text-slate-400 px-1">분</span>
+                        </div>
+                        <span class="text-base font-bold text-yellow-500">:</span>
+                        <div class="flex items-center bg-white rounded-lg border-2 border-yellow-200 p-0.5 shadow-inner">
+                            <input type="number" id="input-sec" value="0" min="0" max="59" class="w-9 text-center text-base font-bold text-slate-700 focus:outline-none">
+                            <span class="text-xs font-bold text-slate-400 px-1">초</span>
+                        </div>
+                        <button onclick="quickSetTime(10, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">10분</button>
+                        <button onclick="quickSetTime(15, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">15분</button>
+                        <button onclick="quickSetTime(20, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">20분</button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 w-full md:w-auto justify-center">
+                    <button onclick="openEditNamesModal()" class="bg-indigo-400 hover:bg-indigo-500 text-white text-xs md:text-sm font-extrabold px-3 py-1.5 rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-1 border-b-4 border-indigo-600 kids-font">
+                        ✏️ 명단/동물 수정
+                    </button>
+                    <button onclick="startActivityFromSetup()" class="bg-emerald-400 hover:bg-emerald-500 text-white text-sm md:text-base font-extrabold px-4 py-1.5 rounded-xl shadow-md hover:shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 border-b-4 border-emerald-600 kids-font">
+                        🚀 활동 시작하기!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Timer HUD Panel -->
+        <div id="timer-panel" class="hidden z-10 grid grid-cols-3 items-center bg-gradient-to-r from-blue-50 to-indigo-50 p-1 md:p-1.5 rounded-2xl border border-blue-150 shadow-inner flex-shrink-0 w-full">
+            <!-- Left Column: Controls -->
+            <div class="flex flex-col gap-0.5 items-end justify-center w-full pr-1 md:pr-4">
+                <div class="flex items-center gap-1">
+                    <button id="btn-timer-toggle" onclick="toggleTimer()" class="bg-blue-500 hover:bg-blue-600 text-white font-extrabold px-2.5 py-1 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-1 text-[11px] md:text-xs">
+                        <i id="icon-timer-play" class="fa-solid fa-play"></i>
+                        <span id="text-timer-play">시작</span>
+                    </button>
+                    <button onclick="resetTimer()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-1.5 py-1 rounded-lg transition-all active:scale-95 text-[11px] md:text-xs">
+                        <i class="fa-solid fa-rotate-left"></i> 리셋
+                    </button>
+                </div>
+                <div id="timer-status-badge" class="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-100 border border-blue-150 px-1.5 py-0.5 rounded-full text-center">
+                    대기 중.. ⏱️
+                </div>
+            </div>
+
+            <!-- Center Column: Circular Visual Timer -->
+            <div class="flex flex-col justify-center items-center w-full gap-1">
+                <div class="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center bg-white rounded-full shadow-md border-2 border-blue-100 transition-all">
+                    <svg class="absolute w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                        <circle cx="100" cy="100" r="85" stroke="#e2e8f0" stroke-width="12" fill="transparent"/>
+                        <circle id="timer-progress" cx="100" cy="100" r="85" stroke="#3b82f6" stroke-width="12" fill="transparent" stroke-dasharray="534.1" stroke-dashoffset="0" stroke-linecap="round" class="progress-ring__circle"/>
+                    </svg>
+                    <div class="text-lg sm:text-xl md:text-3xl font-black text-slate-700 flex flex-col items-center z-10">
+                        <span id="display-time" class="tracking-wider">10:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Status -->
+            <div class="flex gap-1 md:gap-1.5 text-center items-center justify-start w-full pl-1 md:pl-4">
+                <div class="bg-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-lg shadow-sm border border-slate-100">
+                    <div class="text-[8px] md:text-[9px] text-slate-400 font-bold leading-tight">완료한 아동</div>
+                    <div class="text-xs md:text-base font-black text-rose-500 leading-none mt-0.5"><span id="completed-count">0</span> / <span id="total-count">21</span></div>
+                </div>
+                <button onclick="resetAllCompletions()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold px-1.5 py-1 md:px-2 md:py-1 rounded-lg transition-all active:scale-95 flex items-center gap-1 text-[10px] md:text-xs">
+                    <i class="fa-solid fa-heart-crack"></i> 리셋
+                </button>
+            </div>
+        </div>
+
+        <!-- 21 Character Grid (7, 7, 7 Rows Layout) -->
+        <div id="character-grid-container" class="flex-1 min-h-0 flex flex-col justify-between gap-1 md:gap-1.5 py-1 z-10 w-full overflow-hidden">
+            <div id="grid-row-1" class="flex-1 min-h-0 grid grid-cols-7 gap-1 md:gap-1.5 justify-center"></div>
+            <div id="grid-row-2" class="flex-1 min-h-0 grid grid-cols-7 gap-1 md:gap-1.5 justify-center"></div>
+            <div id="grid-row-3" class="flex-1 min-h-0 grid grid-cols-7 gap-1 md:gap-1.5 justify-center"></div>
+        </div>
+
+        <!-- Footer Controls Integration -->
+        <div class="flex flex-col items-center gap-0.5 border-t border-dashed border-yellow-200 pt-1 pb-0.5 z-10 w-full text-center flex-shrink-0">
+            <div class="flex items-center gap-1 bg-yellow-100 p-0.5 rounded-xl border-2 border-yellow-200 scale-90 md:scale-95 origin-center shadow-inner">
+                <button id="btn-setup-mode" onclick="switchMode('setup')" class="px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all bg-yellow-400 text-white shadow-sm">
+                    🔧 정하기 모드
+                </button>
+                <button id="btn-activity-mode" onclick="switchMode('activity')" class="px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all text-yellow-700 hover:bg-yellow-200">
+                    ⏱️ 활동 모드
+                </button>
+            </div>
+            <div class="text-[9px] text-slate-400">
+                <span id="footer-class-name">ㅇㅇ반</span> 전용 맞춤 타이머 (21명) 🌤️
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Bulk Name and Animal Selection -->
+    <div id="edit-names-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white rounded-3xl p-3 md:p-5 w-full max-w-3xl max-h-[92vh] flex flex-col border-4 border-yellow-300 shadow-2xl">
+            <div class="flex justify-between items-center pb-2 border-b border-yellow-200">
+                <h2 class="text-lg md:text-xl font-bold text-yellow-700 kids-font">📝 반 이름 및 어린이 설정 (21명)</h2>
+                <button onclick="closeEditNamesModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold p-1">✕</button>
+            </div>
+            
+            <div class="overflow-y-auto flex-1 my-2 pr-1 space-y-2">
+                <!-- Class Name Edit Section -->
+                <div class="bg-yellow-50 p-2 rounded-2xl border border-yellow-200">
+                    <label class="block text-xs font-bold text-yellow-800 mb-1">🌤️ 학급 이름:</label>
+                    <input type="text" id="modal-class-title-input" placeholder="ㅇㅇ반" class="w-full bg-white border-2 border-yellow-300 rounded-xl px-3 py-1 text-xs md:text-sm font-bold text-slate-700 focus:outline-none focus:border-yellow-500">
+                </div>
+
+                <!-- Kids Names Edit Grid -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">👦👧 어린이 이름 및 동물 (21명):</label>
+                    <div id="modal-kids-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5">
+                        <!-- Dynamically generated -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-slate-100">
+                <button onclick="saveBulkNamesFromModal()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-1.5 rounded-xl text-xs md:text-sm shadow transition">
+                    💾 저장하기
+                </button>
+                <button onclick="closeEditNamesModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-1.5 rounded-xl text-xs md:text-sm transition">
+                    취소
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'kinder_timer_21_data_v1';
+
+        // Animals Database
+        const ANIMALS_DATABASE = [
+            { id: 'chick', emoji: '🐥', name: '병아리', color: 'bg-yellow-100 border-yellow-300 text-yellow-600 hover:bg-yellow-200' },
+            { id: 'tiger', emoji: '🐯', name: '호랑이', color: 'bg-orange-100 border-orange-300 text-orange-600 hover:bg-orange-200' },
+            { id: 'rabbit', emoji: '🐰', name: '토끼', color: 'bg-pink-100 border-pink-300 text-pink-500 hover:bg-pink-200' },
+            { id: 'cat', emoji: '🐱', name: '고양이', color: 'bg-orange-50 border-orange-200 text-amber-600 hover:bg-orange-100' },
+            { id: 'mouse', emoji: '🐭', name: '생쥐', color: 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:bg-zinc-200' },
+            { id: 'fox', emoji: '🦊', name: '여우', color: 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' },
+            { id: 'dog', emoji: '🐶', name: '강아지', color: 'bg-stone-100 border-stone-300 text-stone-600 hover:bg-stone-200' },
+            { id: 'lion', emoji: '🦁', name: '사자', color: 'bg-amber-100 border-amber-300 text-amber-600 hover:bg-amber-200' },
+            { id: 'elephant', emoji: '🐘', name: '코끼리', color: 'bg-cyan-100 border-cyan-300 text-cyan-600 hover:bg-cyan-200' },
+            { id: 'frog', emoji: '🐸', name: '개구리', color: 'bg-emerald-100 border-emerald-300 text-emerald-600 hover:bg-emerald-200' },
+            { id: 'unicorn', emoji: '🦄', name: '유니콘', color: 'bg-purple-100 border-purple-300 text-purple-600 hover:bg-purple-200' },
+            { id: 'hamster', emoji: '🐹', name: '햄스터', color: 'bg-orange-100/70 border-amber-200 text-amber-700 hover:bg-orange-100' },
+            { id: 'bear', emoji: '🐻', name: '곰', color: 'bg-amber-200/60 border-amber-400 text-amber-800 hover:bg-amber-200' },
+            { id: 'panda', emoji: '🐼', name: '판다', color: 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200' },
+            { id: 'koala', emoji: '🐨', name: '코알라', color: 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200' }
+        ];
+
+        let className = 'ㅇㅇ반';
+        let kidsData = [];
+        let activeMode = 'setup'; 
+        let timerDuration = 600; 
+        let timerRemaining = 600;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        function saveStateToLocalStorage() {
+            try {
+                const payload = {)
+                    className: className,
+                    kidsData: kidsData.map(k => ({
+                        id: k.id,
+                        name: k.name,
+                        animalId: k.animal.id,
+                        completed: k.completed
+                    }))
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {
+                console.warn('LocalStorage save failed:', e);
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.className !== undefined) className = parsed.className;
+                    if (Array.isArray(parsed.kidsData) && parsed.kidsData.length === 21) {
+                        kidsData = parsed.kidsData.map((item, idx) => {
+                            const foundAnimal = ANIMALS_DATABASE.find(a => a.id === item.animalId) || ANIMALS_DATABASE[idx % ANIMALS_DATABASE.length];
+                            return {
+                                id: idx,
+                                name: item.name || '',
+                                animal: foundAnimal,
+                                completed: !!item.completed
+                            };
+                        });
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('LocalStorage load failed:', e);
+            }
+            return false;
+        }
+
+        function initData() {
+            const loaded = loadStateFromLocalStorage();
+            if (!loaded) {
+                kidsData = Array.from({ length: 21 }, (_, idx) => ({
+                    id: idx,
+                    name: '',
+                    animal: ANIMALS_DATABASE[idx % ANIMALS_DATABASE.length],
+                    completed: false
+                }));
+            }
+            updateClassTitleDisplay();
+        }
+
+        function updateClassTitleDisplay() {
+            const title = className.trim() !== '' ? className : 'ㅇㅇ반';
+            document.getElementById('class-title-display').textContent = `신나는 ${title} 타이머`;
+            document.getElementById('footer-class-name').textContent = title;
+        }
+
+        function editClassTitle() {
+            const newTitle = prompt('학급 이름을 입력해주세요 (예: ㅇㅇ반, 하늘반):', className);
+            if (newTitle !== null) {
+                className = newTitle.trim() || 'ㅇㅇ반';
+                updateClassTitleDisplay();
+                saveStateToLocalStorage();
+            }
+        }
+
+        function changeAnimal(index) {
+            const currentKid = kidsData[index];
+            const currentAnimalIdx = ANIMALS_DATABASE.findIndex(a => a.id === currentKid.animal.id);
+            const nextAnimalIdx = (currentAnimalIdx + 1) % ANIMALS_DATABASE.length;
+            currentKid.animal = ANIMALS_DATABASE[nextAnimalIdx];
+            renderKidsGrid();
+            saveStateToLocalStorage();
+        }
+
+        function editSingleKidName(index, event) {
+            if (event) event.stopPropagation();
+            const currentName = kidsData[index].name;
+            const newName = prompt(`${index + 1}번째 어린이의 이름을 입력하세요:`, currentName);
+            if (newName !== null) {
+                kidsData[index].name = newName.trim();
+                renderKidsGrid();
+                saveStateToLocalStorage();
+            }
+        }
+
+        function openEditNamesModal() {
+            document.getElementById('modal-class-title-input').value = className;
+            const grid = document.getElementById('modal-kids-inputs-grid');
+            grid.innerHTML = '';
+            
+            kidsData.forEach((kid, idx) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200';
+                
+                let selectOptions = ANIMALS_DATABASE.map(a => 
+                    `<option value="${a.id}" ${a.id === kid.animal.id ? 'selected' : ''}>${a.emoji} ${a.name}</option>`
+                ).join('');
+
+                item.innerHTML = `
+                    <span class="text-[11px] font-bold text-slate-400 w-5">${idx + 1}.</span>
+                    <select id="modal-animal-select-${idx}" class="text-xs bg-white border border-slate-300 rounded-lg p-1 text-slate-700">
+                        ${selectOptions}
+                    </select>
+                    <input type="text" id="modal-kid-input-${idx}" value="${kid.name}" placeholder="이름 입력" class="w-full bg-white border border-slate-300 rounded-lg px-1.5 py-1 text-xs font-bold text-slate-700 focus:outline-none focus:border-yellow-400">
+                `;
+                grid.appendChild(item);
+            });
+
+            document.getElementById('edit-names-modal').classList.remove('hidden');
+        }
+
+        function closeEditNamesModal() {
+            document.getElementById('edit-names-modal').classList.add('hidden');
+        }
+
+        function saveBulkNamesFromModal() {
+            const newClassTitle = document.getElementById('modal-class-title-input').value.trim();
+            className = newClassTitle || 'ㅇㅇ반';
+            updateClassTitleDisplay();
+
+            kidsData.forEach((kid, idx) => {
+                const input = document.getElementById(`modal-kid-input-${idx}`);
+                const animalSelect = document.getElementById(`modal-animal-select-${idx}`);
+                if (input) kid.name = input.value.trim();
+                if (animalSelect) {
+                    const selectedAnimal = ANIMALS_DATABASE.find(a => a.id === animalSelect.value);
+                    if (selectedAnimal) kid.animal = selectedAnimal;
+                }
+            });
+
+            renderKidsGrid();
+            saveStateToLocalStorage();
+            closeEditNamesModal();
+        }
+
+        function renderKidsGrid() {
+            const rows = [
+                document.getElementById('grid-row-1'),
+                document.getElementById('grid-row-2'),
+                document.getElementById('grid-row-3')
+            ];
+            if (!rows[0]) return;
+            rows.forEach(r => r.innerHTML = '');
+
+            kidsData.forEach((kid, idx) => {
+                const card = document.createElement('div');
+                card.id = `kid-card-${idx}`;
+                const completedBg = kid.completed ? 'bg-gradient-to-br from-rose-50 to-amber-50 border-rose-400 scale-[0.98]' : 'bg-white border-slate-200';
+                card.className = `character-card relative h-full flex flex-col items-center justify-between p-1 rounded-xl border-2 transition-all duration-200 overflow-hidden ${completedBg}`;
+                
+                card.onclick = (e) => handleCardClick(idx, e);
+
+                const displayName = kid.name.trim() !== '' ? kid.name : `어린이 ${idx + 1}`;
+                const nameColorClass = kid.name.trim() !== '' ? 'text-slate-900 bg-yellow-100 ring-1 ring-yellow-300 border-yellow-400' : 'text-slate-400 bg-slate-50 border-slate-200';
+
+                card.innerHTML = `
+                    <div onclick="handleAnimalClick(${idx}, event)" title="클릭하여 동물 바꾸기" class="relative w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 lg:w-16 lg:h-16 flex items-center justify-center rounded-xl ${kid.animal.color} shadow-sm flex-shrink-0 cursor-pointer group">
+                        <span class="text-xl sm:text-2xl md:text-3xl lg:text-4xl select-none transform transition group-hover:scale-110">${kid.animal.emoji}</span>
+                        <div class="absolute -bottom-1 right-0 bg-yellow-400 text-yellow-900 text-[7px] font-bold px-0.5 rounded-full border border-white shadow-sm opacity-80 group-hover:opacity-100">
+                            🔄
+                        </div>
+                        <div class="absolute -top-1 -right-1 bg-rose-500 text-white w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-md border border-white transform transition-all duration-300 ${kid.completed ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
+                            <i class="fa-solid fa-heart text-[7px] sm:text-[9px]"></i>
+                        </div>
+                        <div class="absolute -bottom-1 -left-1 bg-emerald-500 text-white px-0.5 py-0.2 rounded text-[6px] sm:text-[8px] font-black border border-white transform transition-all duration-300 ${kid.completed ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">완료!</div>
+                    </div>
+                    <div class="w-full text-center mt-0.5 flex-shrink-0 relative">
+                        <div class="text-[10px] sm:text-xs md:text-sm rounded-lg py-0.5 px-0.5 font-bold ${nameColorClass} truncate flex items-center justify-center gap-0.5">
+                            <span class="truncate">${displayName}</span>
+                            <button onclick="editSingleKidName(${idx}, event)" title="이름 수정" class="text-slate-400 hover:text-yellow-700 text-[8px] md:text-[10px] flex-shrink-0">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                if (idx < 7) rows[0].appendChild(card);
+                else if (idx < 14) rows[1].appendChild(card);
+                else rows[2].appendChild(card);
+            });
+
+            updateDisplay();
+        }
+
+        function handleAnimalClick(index, event) {
+            event.stopPropagation();
+            changeAnimal(index);
+        }
+
+        function handleCardClick(index, event) {
+            if (activeMode === 'setup') return;
+
+            const kid = kidsData[index];
+            kid.completed = !kid.completed;
+
+            renderKidsGrid();
+            saveStateToLocalStorage();
+        }
+
+        function updateDisplay() {
+            const completedCount = kidsData.filter(k => k.completed).length;
+            const completedElem = document.getElementById('completed-count');
+            if (completedElem) completedElem.textContent = completedCount;
+        }
+
+        function quickSetTime(min, sec) {
+            document.getElementById('input-min').value = min;
+            document.getElementById('input-sec').value = sec;
+        }
+
+        function updateTimerFromInputs() {
+            const m = parseInt(document.getElementById('input-min').value) || 0;
+            const s = parseInt(document.getElementById('input-sec').value) || 0;
+            timerDuration = m * 60 + s;
+            timerRemaining = timerDuration;
+            formatDisplayTime();
+        }
+
+        function formatDisplayTime() {
+            const m = Math.floor(timerRemaining / 60);
+            const s = timerRemaining % 60;
+            const formatted = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            document.getElementById('display-time').textContent = formatted;
+        }
+
+        function switchMode(mode) {
+            activeMode = mode;
+            const btnSetup = document.getElementById('btn-setup-mode');
+            const btnActivity = document.getElementById('btn-activity-mode');
+            const setupPanel = document.getElementById('setup-panel');
+            const timerPanel = document.getElementById('timer-panel');
+
+            if (mode === 'setup') {
+                btnSetup.className = "px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all bg-yellow-400 text-white shadow-sm";
+                btnActivity.className = "px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all text-yellow-700 hover:bg-yellow-200";
+                setupPanel.classList.remove('hidden'); timerPanel.classList.add('hidden');
+            } else {
+                btnActivity.className = "px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all bg-blue-500 text-white shadow-sm";
+                btnSetup.className = "px-3 py-1 rounded-lg text-xs md:text-sm font-bold transition-all text-yellow-700 hover:bg-yellow-200";
+                setupPanel.classList.add('hidden'); timerPanel.classList.remove('hidden');
+                updateTimerFromInputs();
+            }
+            renderKidsGrid();
+        }
+
+        function startActivityFromSetup() {
+            updateTimerFromInputs();
+            switchMode('activity');
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('text-timer-play').textContent = '시작';
+                document.getElementById('icon-timer-play').className = 'fa-solid fa-play';
+            } else {
+                isTimerRunning = true;
+                document.getElementById('text-timer-play').textContent = '일시정지';
+                document.getElementById('icon-timer-play').className = 'fa-solid fa-pause';
+                timerInterval = setInterval(() => {
+                    if (timerRemaining > 0) {
+                        timerRemaining--;
+                        formatDisplayTime();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            isTimerRunning = false;
+            updateTimerFromInputs();
+            document.getElementById('text-timer-play').textContent = '시작';
+            document.getElementById('icon-timer-play').className = 'fa-solid fa-play';
+        }
+
+        function resetAllCompletions() {
+            kidsData.forEach(k => k.completed = false);
+            renderKidsGrid();
+            saveStateToLocalStorage();
+        }
+
+        window.onload = function() {
+            initData();
+            updateTimerFromInputs();
+            renderKidsGrid();
+        };
+    </script>
+</body>
+</html>
+```
