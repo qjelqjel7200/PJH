@@ -1,0 +1,744 @@
+```html
+<!DOCTYPE html>
+<html lang="ko" class="h-full overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>신나는 하늘반 타이머</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for friendly, clear typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        html, body {
+            height: 100%;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Gaegu', 'Nunito', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #fef9c3 0%, #dbeafe 100%);
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kids-font {
+            font-family: 'Gaegu', cursive;
+        }
+        .character-card {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .character-card:active {
+            transform: scale(0.95);
+        }
+        /* Single tap heart floating styling */
+        .floating-heart {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp 1.2s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px) scale(1.5);
+                opacity: 0;
+            }
+        }
+        /* All-Completed Gentle & Wide Heart Burst Styling */
+        .burst-heart {
+            position: absolute;
+            pointer-events: none;
+            animation: grand-burst 3.2s cubic-bezier(0.1, 0.6, 0.3, 1) forwards;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }
+        @keyframes grand-burst {
+            0% {
+                transform: translate(-50%, -50%) scale(0.1);
+                opacity: 0;
+            }
+            12% {
+                opacity: 0.85;
+            }
+            100% {
+                transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.4) rotate(var(--rot));
+                opacity: 0;
+            }
+        }
+        /* Custom progress ring styling */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="p-2 md:p-3 text-slate-800">
+
+    <div class="w-full max-w-6xl h-[97dvh] max-h-[97dvh] bg-white/85 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-yellow-300 p-2 md:p-4 flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- Background decorative clouds -->
+        <div class="absolute top-2 left-4 text-sky-200/40 text-4xl pointer-events-none"><i class="fa-solid fa-cloud"></i></div>
+        <div class="absolute top-8 right-12 text-pink-200/40 text-5xl pointer-events-none animate-bounce" style="animation-duration: 4s;"><i class="fa-solid fa-cloud"></i></div>
+
+        <!-- Header Panel with Centered Title -->
+        <div class="flex flex-col items-center justify-center gap-0.5 pb-1 z-10 w-full text-center flex-shrink-0">
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex items-center gap-2 justify-center">
+                    <span class="text-3xl md:text-4xl animate-bounce" style="animation-duration: 3s;">🌤️</span>
+                    <h1 class="text-3xl md:text-5xl font-bold text-yellow-600 tracking-wide kids-font">신나는 하늘반 타이머</h1>
+                    <span class="text-3xl md:text-4xl animate-bounce" style="animation-duration: 3s; animation-delay: 0.5s;">🌤️</span>
+                </div>
+                <p class="text-[10px] md:text-xs text-slate-400 font-bold">활동 시간이 끝난 후 캐릭터를 누르면 하트와 완료 표시가 나타나요!</p>
+            </div>
+        </div>
+
+        <!-- Setup Screen Panel (Directly under Header) -->
+        <div id="setup-panel" class="z-10 flex flex-col gap-1.5 flex-shrink-0">
+            <div class="bg-yellow-50 rounded-2xl p-2 border border-yellow-150 flex flex-col md:flex-row gap-2 items-center justify-between shadow-sm">
+                <!-- Timer Settings -->
+                <div class="flex flex-col gap-0.5 w-full md:w-auto">
+                    <span class="text-xs md:text-sm font-bold text-slate-600 flex items-center gap-2 justify-center md:justify-start">
+                        ⏱️ 활동 시간을 정해주세요:
+                    </span>
+                    <div class="flex items-center gap-1.5 justify-center">
+                        <div class="flex items-center bg-white rounded-lg border-2 border-yellow-200 p-0.5 shadow-inner">
+                            <input type="number" id="input-min" value="10" min="0" max="99" class="w-10 text-center text-lg font-bold text-slate-700 focus:outline-none">
+                            <span class="text-xs font-bold text-slate-400 px-1">분</span>
+                        </div>
+                        <span class="text-lg font-bold text-yellow-500">:</span>
+                        <div class="flex items-center bg-white rounded-lg border-2 border-yellow-200 p-0.5 shadow-inner">
+                            <input type="number" id="input-sec" value="0" min="0" max="59" class="w-10 text-center text-lg font-bold text-slate-700 focus:outline-none">
+                            <span class="text-xs font-bold text-slate-400 px-1">초</span>
+                        </div>
+                        <button onclick="quickSetTime(10, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">10분</button>
+                        <button onclick="quickSetTime(15, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">15분</button>
+                        <button onclick="quickSetTime(20, 0)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold px-2 py-1 rounded-lg border border-amber-200 text-xs">20분</button>
+                    </div>
+                </div>
+
+                <!-- Start Big Button -->
+                <button onclick="startActivityFromSetup()" class="w-full md:w-auto bg-emerald-400 hover:bg-emerald-500 text-white text-base md:text-lg font-extrabold px-5 py-2 rounded-xl shadow-md hover:shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 border-b-4 border-emerald-600 kids-font">
+                    🚀 활동 시작하기!
+                </button>
+            </div>
+        </div>
+
+        <!-- Active Timer HUD Panel -->
+        <div id="timer-panel" class="hidden z-10 grid grid-cols-3 items-center bg-gradient-to-r from-blue-50 to-indigo-50 p-1.5 md:p-2 rounded-2xl border border-blue-150 shadow-inner flex-shrink-0 w-full">
+            
+            <!-- Left Column: Controls -->
+            <div class="flex flex-col gap-0.5 items-end justify-center w-full pr-1 md:pr-4">
+                <div class="flex items-center gap-1">
+                    <button id="btn-timer-toggle" onclick="toggleTimer()" class="bg-blue-500 hover:bg-blue-600 text-white font-extrabold px-2.5 py-1.5 rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-1 text-[11px] md:text-xs">
+                        <i id="icon-timer-play" class="fa-solid fa-play"></i>
+                        <span id="text-timer-play">시작</span>
+                    </button>
+                    <button onclick="resetTimer()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-1.5 py-1.5 rounded-lg transition-all active:scale-95 text-[11px] md:text-xs">
+                        <i class="fa-solid fa-rotate-left"></i> 리셋
+                    </button>
+                </div>
+                <div id="timer-status-badge" class="text-[9px] md:text-[10px] font-bold text-blue-600 bg-blue-100 border border-blue-150 px-1.5 py-0.5 rounded-full text-center">
+                    대기 중.. ⏱️
+                </div>
+            </div>
+
+            <!-- Center Column: Circular Visual Timer -->
+            <div class="flex flex-col justify-center items-center w-full gap-1">
+                <div class="relative w-28 h-28 sm:w-32 sm:h-32 md:w-38 md:h-38 lg:w-44 lg:h-44 flex items-center justify-center bg-white rounded-full shadow-md border-2 border-blue-100 transition-all">
+                    <svg class="absolute w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+                        <circle cx="100" cy="100" r="85" stroke="#e2e8f0" stroke-width="12" fill="transparent"/>
+                        <circle id="timer-progress" cx="100" cy="100" r="85" stroke="#3b82f6" stroke-width="12" fill="transparent" stroke-dasharray="534.1" stroke-dashoffset="0" stroke-linecap="round" class="progress-ring__circle"/>
+                    </svg>
+                    <div class="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black text-slate-700 flex flex-col items-center z-10">
+                        <span id="display-time" class="tracking-wider">10:00</span>
+                    </div>
+                </div>
+                <!-- Interactive BGM Toggle Button -->
+                <button id="bgm-toggle-btn" onclick="toggleBgmSetting()" class="z-20 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2 py-0.5 rounded-full text-[10px] md:text-xs flex items-center gap-1 shadow-sm transition-all active:scale-95">
+                    <i id="bgm-icon" class="fa-solid fa-music text-[9px] md:text-[10px]"></i>
+                    <span id="bgm-text">음악 켜짐</span>
+                </button>
+            </div>
+
+            <!-- Right Column: Status & Reset Completion -->
+            <div class="flex gap-1 md:gap-1.5 text-center items-center justify-start w-full pl-1 md:pl-4">
+                <div class="bg-white px-1.5 py-0.5 md:px-2.5 md:py-1 rounded-lg shadow-sm border border-slate-100">
+                    <div class="text-[8px] md:text-[9px] text-slate-400 font-bold leading-tight">완료한 아동</div>
+                    <div class="text-sm md:text-lg font-black text-rose-500 leading-none mt-0.5"><span id="completed-count">0</span> / <span id="total-count">15</span></div>
+                </div>
+                <button onclick="resetAllCompletions()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold px-1.5 py-1.5 md:px-2 md:py-2 rounded-lg transition-all active:scale-95 flex items-center gap-1 text-[11px] md:text-xs">
+                    <i class="fa-solid fa-heart-crack"></i> 리셋
+                </button>
+            </div>
+        </div>
+
+        <!-- 15 Character Grid (5, 5, 5 Rows Layout) -->
+        <div id="character-grid-container" class="flex-1 min-h-0 flex flex-col justify-between gap-1 md:gap-2 py-1.5 z-10 w-full overflow-hidden">
+            <!-- Row 1 (5 Kids) -->
+            <div id="grid-row-1" class="flex-1 min-h-0 grid grid-cols-5 gap-1.5 md:gap-2.5 justify-center"></div>
+            <!-- Row 2 (5 Kids) -->
+            <div id="grid-row-2" class="flex-1 min-h-0 grid grid-cols-5 gap-1.5 md:gap-2.5 justify-center"></div>
+            <!-- Row 3 (5 Kids) -->
+            <div id="grid-row-3" class="flex-1 min-h-0 grid grid-cols-5 gap-1.5 md:gap-2.5 justify-center"></div>
+        </div>
+
+        <!-- Footer / Controls Integration -->
+        <div class="flex flex-col items-center gap-1 border-t border-dashed border-yellow-200 pt-1.5 pb-0.5 z-10 w-full text-center flex-shrink-0">
+            <div class="flex items-center gap-1 bg-yellow-100 p-0.5 rounded-xl border-2 border-yellow-200 scale-95 md:scale-100 origin-center shadow-inner">
+                <button id="btn-setup-mode" onclick="switchMode('setup')" class="px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all bg-yellow-400 text-white shadow-sm">
+                    🔧 정하기 모드
+                </button>
+                <button id="btn-activity-mode" onclick="switchMode('activity')" class="px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all text-yellow-700 hover:bg-yellow-200">
+                    ⏱️ 활동 모드
+                </button>
+            </div>
+            
+            <div class="text-[9px] text-slate-400 mt-0.5">
+                신나는 하늘반 전용 고정 타이머 🌤️
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animals Database
+        const ANIMALS_DATABASE = [
+            { id: 'chick', emoji: '🐥', color: 'bg-yellow-100 border-yellow-300 text-yellow-600 hover:bg-yellow-200' },
+            { id: 'tiger', emoji: '🐯', color: 'bg-orange-100 border-orange-300 text-orange-600 hover:bg-orange-200' },
+            { id: 'rabbit', emoji: '🐰', color: 'bg-pink-100 border-pink-300 text-pink-500 hover:bg-pink-200' },
+            { id: 'cat', emoji: '🐱', color: 'bg-orange-50 border-orange-200 text-amber-600 hover:bg-orange-100' },
+            { id: 'mouse', emoji: '🐭', color: 'bg-zinc-100 border-zinc-200 text-zinc-500 hover:bg-zinc-200' },
+            { id: 'fox', emoji: '🦊', color: 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' },
+            { id: 'dog', emoji: '🐶', color: 'bg-stone-100 border-stone-300 text-stone-600 hover:bg-stone-200' },
+            { id: 'lion', emoji: '🦁', color: 'bg-amber-100 border-amber-300 text-amber-600 hover:bg-amber-200' },
+            { id: 'elephant', emoji: '🐘', color: 'bg-cyan-100 border-cyan-300 text-cyan-600 hover:bg-cyan-200' },
+            { id: 'frog', emoji: '🐸', color: 'bg-emerald-100 border-emerald-300 text-emerald-600 hover:bg-emerald-200' },
+            { id: 'unicorn', emoji: '🦄', color: 'bg-purple-100 border-purple-300 text-purple-600 hover:bg-purple-200' },
+            { id: 'hamster', emoji: '🐹', color: 'bg-orange-100/70 border-amber-200 text-amber-700 hover:bg-orange-100' }
+        ];
+
+        // 15 Kids (Wang Im-seung removed)
+        const PHOTO_DEFAULTS = [
+            { name: '배시우', animalId: 'chick' },
+            { name: '최하온', animalId: 'tiger' },
+            { name: '조민건', animalId: 'rabbit' },
+            { name: '조민서', animalId: 'cat' },
+            { name: '진도윤', animalId: 'hamster' },
+            { name: '정다온', animalId: 'fox' },
+            { name: '박시은', animalId: 'cat' },
+            { name: '서은유', animalId: 'cat' },
+            { name: '김범', animalId: 'dog' },
+            { name: '이지아', animalId: 'rabbit' },
+            { name: '김시우', animalId: 'lion' },
+            { name: '이유원', animalId: 'elephant' },
+            { name: '김택한', animalId: 'frog' },
+            { name: '강동우', animalId: 'frog' },
+            { name: '김승현', animalId: 'unicorn' }
+        ];
+
+        let kidsData = [];
+        let activeMode = 'setup'; 
+        let timerDuration = 600; 
+        let timerRemaining = 600;
+        let timerInterval = null;
+        let isTimerRunning = false;
+        let audioContext = null;
+
+        // BGM State
+        let isBgmEnabled = true;
+        let bgmIntervalId = null;
+        let bgmNoteIndex = 0;
+
+        // Celebrate fountain interval handles
+        let burstIntervalId = null;
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        // Mechanical Timer End Sound (Ding-Dong)
+        function playDingDongSound() {
+            initAudio();
+            const now = audioContext.currentTime;
+            const osc1 = audioContext.createOscillator();
+            const gain1 = audioContext.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(783.99, now);
+            gain1.gain.setValueAtTime(0.3, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+            osc1.connect(gain1); gain1.connect(audioContext.destination);
+            osc1.start(now); osc1.stop(now + 1.2);
+        }
+
+        // Standard card tap sound
+        function playPopSound() {
+            initAudio();
+            const now = audioContext.currentTime;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.connect(gain); gain.connect(audioContext.destination);
+            osc.start(now); osc.stop(now + 0.1);
+        }
+
+        // Single child complete chime
+        function playSuccessSound() {
+            initAudio();
+            const now = audioContext.currentTime;
+            const frequencies = [1046.50, 1318.51];
+            frequencies.forEach((freq, i) => {
+                const o = audioContext.createOscillator();
+                const g = audioContext.createGain();
+                o.type = 'sine';
+                o.frequency.setValueAtTime(freq, now + i * 0.08);
+                g.gain.setValueAtTime(0, now);
+                g.gain.setValueAtTime(0.15, now + i * 0.08);
+                g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.3);
+                o.connect(g); g.connect(audioContext.destination);
+                o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.3);
+            });
+        }
+
+        // Highly Optimized Standard Hand Clap Synthesis ("짝!")
+        function playSingleClap(time) {
+            const bufferSize = audioContext.sampleRate * 0.08; 
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = audioContext.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1100, time); 
+            filter.Q.setValueAtTime(3.0, time);
+
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.45, time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.07);
+
+            const slapBody = audioContext.createOscillator();
+            const slapGain = audioContext.createGain();
+            slapBody.type = 'triangle';
+            slapBody.frequency.setValueAtTime(170, time);
+            slapBody.frequency.exponentialRampToValueAtTime(75, time + 0.03);
+            
+            slapGain.gain.setValueAtTime(0.2, time);
+            slapGain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+
+            slapBody.connect(slapGain);
+            slapGain.connect(audioContext.destination);
+
+            noise.start(time);
+            noise.stop(time + 0.08);
+            slapBody.start(time);
+            slapBody.stop(time + 0.04);
+        }
+
+        // Steady Rhythmic "Clap! Clap! Clap! Clap!" for EXACTLY 10.0 Seconds
+        function playLongApplauseSound() {
+            initAudio();
+            const now = audioContext.currentTime;
+            const totalDuration = 10.0; 
+            const clapInterval = 0.38; 
+
+            for (let t = 0; t < totalDuration; t += clapInterval) {
+                const swing = (Math.random() - 0.5) * 0.024;
+                playSingleClap(now + t + swing);
+            }
+        }
+
+        // Beautiful Harp Arpeggio for All-Completed Celebration
+        function playMagicHarpSound() {
+            initAudio();
+            const now = audioContext.currentTime;
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98, 2093.00, 2637.02]; 
+            notes.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.setValueAtTime(0.15, now + i * 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.7);
+                osc.connect(gain); gain.connect(audioContext.destination);
+                osc.start(now + i * 0.06); osc.stop(now + i * 0.06 + 0.7);
+            });
+        }
+
+        // Procedural BGM Synthesizer for Children (Happy and Friendly Kindergarten Tune)
+        const BGM_MELODY = [
+            { note: 523.25, type: 'sine', duration: 0.25 }, 
+            { note: 659.25, type: 'triangle', duration: 0.25 }, 
+            { note: 783.99, type: 'sine', duration: 0.25 }, 
+            { note: 659.25, type: 'triangle', duration: 0.25 }, 
+            
+            { note: 587.33, type: 'sine', duration: 0.25 }, 
+            { note: 739.99, type: 'triangle', duration: 0.25 }, 
+            { note: 880.00, type: 'sine', duration: 0.25 }, 
+            { note: 739.99, type: 'triangle', duration: 0.25 }, 
+
+            { note: 440.00, type: 'sine', duration: 0.25 }, 
+            { note: 523.25, type: 'triangle', duration: 0.25 }, 
+            { note: 659.25, type: 'sine', duration: 0.25 }, 
+            { note: 523.25, type: 'triangle', duration: 0.25 }, 
+
+            { note: 698.46, type: 'sine', duration: 0.25 }, 
+            { note: 880.00, type: 'triangle', duration: 0.25 }, 
+            { note: 1046.50, type: 'sine', duration: 0.25 }, 
+            { note: 880.00, type: 'triangle', duration: 0.25 }  
+        ];
+
+        function playNextBgmNote() {
+            if (!isTimerRunning || !isBgmEnabled) return;
+            initAudio();
+
+            const now = audioContext.currentTime;
+            const currentItem = BGM_MELODY[bgmNoteIndex];
+
+            const osc = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            osc.type = currentItem.type;
+            osc.frequency.setValueAtTime(currentItem.note, now);
+
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.04, now + 0.05); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + currentItem.duration - 0.02); 
+
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            osc.start(now);
+            osc.stop(now + currentItem.duration);
+
+            bgmNoteIndex = (bgmNoteIndex + 1) % BGM_MELODY.length;
+        }
+
+        function startBgmSystem() {
+            if (bgmIntervalId) return;
+            bgmIntervalId = setInterval(playNextBgmNote, 250);
+        }
+
+        function stopBgmSystem() {
+            if (bgmIntervalId) {
+                clearInterval(bgmIntervalId);
+                bgmIntervalId = null;
+            }
+        }
+
+        function toggleBgmSetting() {
+            isBgmEnabled = !isBgmEnabled;
+            const bgmBtn = document.getElementById('bgm-toggle-btn');
+            const bgmIcon = document.getElementById('bgm-icon');
+            const bgmText = document.getElementById('bgm-text');
+
+            if (isBgmEnabled) {
+                bgmBtn.className = "z-20 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2 py-0.5 rounded-full text-[10px] md:text-xs flex items-center gap-1 shadow-sm transition-all active:scale-95";
+                bgmIcon.className = "fa-solid fa-music text-[9px] md:text-[10px]";
+                bgmText.textContent = "음악 켜짐";
+                initAudio();
+            } else {
+                bgmBtn.className = "z-20 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold px-2 py-0.5 rounded-full text-[10px] md:text-xs flex items-center gap-1 shadow-sm transition-all active:scale-95";
+                bgmIcon.className = "fa-solid fa-volume-xmark text-[9px] md:text-[10px]";
+                bgmText.textContent = "음악 끔";
+            }
+        }
+
+        function initFixedData() {
+            kidsData = PHOTO_DEFAULTS.map((p, idx) => {
+                const dbAnimal = ANIMALS_DATABASE.find(a => a.id === p.animalId) || ANIMALS_DATABASE[0];
+                return { id: idx, name: p.name, animal: dbAnimal, completed: false };
+            });
+        }
+
+        function quickSetTime(min, sec) {
+            document.getElementById('input-min').value = min;
+            document.getElementById('input-sec').value = sec;
+            updateTimerFromInputs();
+        }
+
+        function updateTimerFromInputs() {
+            const min = parseInt(document.getElementById('input-min').value) || 0;
+            const sec = parseInt(document.getElementById('input-sec').value) || 0;
+            timerDuration = (min * 60) + sec;
+            timerRemaining = timerDuration;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timerRemaining / 60);
+            const seconds = timerRemaining % 60;
+            document.getElementById('display-time').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            const circle = document.getElementById('timer-progress');
+            const circumference = 534.1; 
+            const ratio = timerDuration > 0 ? (timerRemaining / timerDuration) : 0;
+            if (circle) circle.style.strokeDashoffset = circumference - (ratio * circumference);
+
+            const completedCount = kidsData.filter(k => k.completed).length;
+            document.getElementById('completed-count').textContent = completedCount;
+        }
+
+        function renderKidsGrid() {
+            const rows = [document.getElementById('grid-row-1'), document.getElementById('grid-row-2'), document.getElementById('grid-row-3')];
+            if (!rows[0]) return;
+            rows.forEach(r => r.innerHTML = '');
+
+            kidsData.forEach((kid, idx) => {
+                const card = document.createElement('div');
+                card.id = `kid-card-${idx}`;
+                const completedBg = kid.completed ? 'bg-gradient-to-br from-rose-50 to-amber-50 border-rose-400 scale-[0.98]' : 'bg-white border-slate-200';
+                card.className = `character-card relative h-full flex flex-col items-center justify-between p-1.5 md:p-2.5 rounded-2xl border-2 md:border-3 transition-all duration-200 cursor-pointer overflow-hidden ${completedBg}`;
+                card.onclick = (e) => handleCardClick(idx, e);
+
+                card.innerHTML = `
+                    <div class="relative w-12 h-12 sm:w-14 sm:h-14 md:w-18 md:h-18 lg:w-22 lg:h-22 flex items-center justify-center rounded-2xl ${kid.animal.color} shadow-sm flex-shrink-0">
+                        <span class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl select-none">${kid.animal.emoji}</span>
+                        <div class="absolute -top-1 -right-1 bg-rose-500 text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md border border-white transform transition-all duration-300 ${kid.completed ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">
+                            <i class="fa-solid fa-heart text-[8px] sm:text-[10px]"></i>
+                        </div>
+                        <div class="absolute -bottom-1 -left-1 bg-emerald-500 text-white px-1 py-0.5 rounded-lg text-[7px] sm:text-[9px] font-black border border-white transform transition-all duration-300 ${kid.completed ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}">완료!</div>
+                    </div>
+                    <div class="w-full text-center mt-1 flex-shrink-0">
+                        <div class="text-xs sm:text-sm md:text-base lg:text-lg rounded-xl py-1 px-1 tracking-wider font-black text-slate-950 border-yellow-400 bg-yellow-100 ring-2 ring-yellow-300 truncate">
+                            ${kid.name}
+                        </div>
+                    </div>
+                `;
+                if (idx < 5) rows[0].appendChild(card);
+                else if (idx < 10) rows[1].appendChild(card);
+                else rows[2].appendChild(card);
+            });
+        }
+
+        function handleCardClick(index, event) {
+            initAudio(); 
+            if (activeMode === 'setup') return;
+
+            const kid = kidsData[index];
+            kid.completed = !kid.completed;
+            
+            const totalCompleted = kidsData.filter(k => k.completed).length;
+
+            if (kid.completed && totalCompleted === 15) {
+                stopBgmSystem(); 
+                playMagicHarpSound();
+                playLongApplauseSound(); 
+                startTenSecondHeartFountain(); 
+            } else {
+                if (kid.completed) {
+                    playSuccessSound();
+                    createSingleFloatingHeart(event);
+                } else {
+                    playPopSound();
+                }
+            }
+
+            renderKidsGrid();
+            updateDisplay();
+        }
+
+        function createSingleFloatingHeart(e) {
+            const particle = document.createElement('div');
+            particle.className = 'floating-heart text-xl z-50 select-none';
+            particle.innerHTML = '❤️';
+            particle.style.left = `${e.clientX}px`;
+            particle.style.top = `${e.clientY}px`;
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 1200);
+        }
+
+        function startTenSecondHeartFountain() {
+            if (burstIntervalId) {
+                clearInterval(burstIntervalId);
+            }
+            spawnFountainWave();
+
+            let wavesRun = 0;
+            burstIntervalId = setInterval(() => {
+                spawnFountainWave();
+                wavesRun++;
+                if (wavesRun >= 20) {
+                    clearInterval(burstIntervalId);
+                    burstIntervalId = null;
+                }
+            }, 500);
+        }
+
+        function spawnFountainWave() {
+            const container = document.body;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const heartTypes = ['❤️', '💖', '💝', '💕', '💗'];
+
+            const epicenters = [
+                { x: screenWidth * 0.5, y: screenHeight * 0.5 },
+                { x: screenWidth * 0.12, y: screenHeight * 0.25 },
+                { x: screenWidth * 0.88, y: screenHeight * 0.25 },
+                { x: screenWidth * 0.12, y: screenHeight * 0.75 },
+                { x: screenWidth * 0.88, y: screenHeight * 0.75 },
+                { x: screenWidth * 0.5, y: screenHeight * 0.12 }
+            ];
+
+            const activeCenters = epicenters.filter(() => Math.random() > 0.45);
+            if (activeCenters.length === 0) activeCenters.push(epicenters[0]);
+
+            activeCenters.forEach(center => {
+                const count = 3 + Math.floor(Math.random() * 4);
+                
+                for (let i = 0; i < count; i++) {
+                    const heart = document.createElement('div');
+                    const sizeClass = Math.random() > 0.7 ? 'text-2xl sm:text-4xl' : 'text-lg sm:text-2xl';
+                    heart.className = `burst-heart ${sizeClass}`;
+                    heart.innerHTML = heartTypes[Math.floor(Math.random() * heartTypes.length)];
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 120 + Math.random() * 500; 
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance;
+                    const rotation = Math.floor(Math.random() * 180) - 90;
+
+                    heart.style.left = `${center.x}px`;
+                    heart.style.top = `${center.y}px`;
+                    heart.style.setProperty('--tx', `${tx}px`);
+                    heart.style.setProperty('--ty', `${ty}px`);
+                    heart.style.setProperty('--rot', `${rotation}deg`);
+
+                    container.appendChild(heart);
+                    setTimeout(() => heart.remove(), 3200);
+                }
+            });
+        }
+
+        function switchMode(mode) {
+            activeMode = mode;
+            const btnSetup = document.getElementById('btn-setup-mode');
+            const btnActivity = document.getElementById('btn-activity-mode');
+            const setupPanel = document.getElementById('setup-panel');
+            const timerPanel = document.getElementById('timer-panel');
+
+            if (mode === 'setup') {
+                btnSetup.className = "px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all bg-yellow-400 text-white shadow-sm";
+                btnActivity.className = "px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all text-yellow-700 hover:bg-yellow-200";
+                setupPanel.classList.remove('hidden'); timerPanel.classList.add('hidden');
+                pauseTimer();
+            } else {
+                btnActivity.className = "px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all bg-blue-500 text-white shadow-sm";
+                btnSetup.className = "px-4 py-1.5 rounded-lg text-xs md:text-sm lg:text-base font-bold transition-all text-yellow-700 hover:bg-yellow-200";
+                setupPanel.classList.add('hidden'); timerPanel.classList.remove('hidden');
+                updateTimerFromInputs();
+            }
+            renderKidsGrid();
+        }
+
+        function startActivityFromSetup() {
+            updateTimerFromInputs();
+            switchMode('activity');
+            startTimer();
+        }
+
+        function toggleTimer() { if (isTimerRunning) pauseTimer(); else startTimer(); }
+
+        function startTimer() {
+            initAudio();
+            if (isTimerRunning) return;
+            if (timerRemaining <= 0) timerRemaining = timerDuration;
+            isTimerRunning = true;
+            document.getElementById('text-timer-play').textContent = '일시정지';
+            document.getElementById('icon-timer-play').className = 'fa-solid fa-pause';
+            document.getElementById('timer-status-badge').textContent = '활동 중입니다! 🏃‍♂️💨';
+            document.getElementById('timer-status-badge').className = 'text-[10px] font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full text-center animate-pulse';
+
+            startBgmSystem();
+
+            timerInterval = setInterval(() => {
+                if (timerRemaining > 0) { timerRemaining--; updateDisplay(); }
+                else { handleTimerEnd(); }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            
+            stopBgmSystem();
+
+            document.getElementById('text-timer-play').textContent = '계속';
+            document.getElementById('icon-timer-play').className = 'fa-solid fa-play';
+            document.getElementById('timer-status-badge').textContent = '잠시 멈춤 🛑';
+            document.getElementById('timer-status-badge').className = 'text-[10px] font-bold text-amber-600 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full text-center';
+        }
+
+        function resetTimer() {
+            pauseTimer(); 
+            timerRemaining = timerDuration; 
+            updateDisplay();
+            document.getElementById('text-timer-play').textContent = '시작';
+            document.getElementById('icon-timer-play').className = 'fa-solid fa-play';
+            document.getElementById('timer-status-badge').textContent = '대기 중.. ⏱️';
+            document.getElementById('timer-status-badge').className = 'text-[10px] font-bold text-blue-600 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full text-center';
+        }
+
+        function resetAllCompletions() {
+            if (burstIntervalId) {
+                clearInterval(burstIntervalId);
+                burstIntervalId = null;
+            }
+            stopBgmSystem();
+            kidsData.forEach(k => k.completed = false);
+            renderKidsGrid(); updateDisplay(); playPopSound();
+        }
+
+        function handleTimerEnd() {
+            pauseTimer(); 
+            stopBgmSystem(); 
+            playDingDongSound();
+            document.getElementById('timer-status-badge').textContent = '🔔 우와! 활동 시간이 끝났어요! 🔔';
+            document.getElementById('timer-status-badge').className = 'text-xs font-black text-rose-600 bg-rose-100 border border-rose-300 px-3 py-1 rounded-full text-center animate-bounce';
+        }
+
+        window.quickSetTime = quickSetTime;
+        window.toggleTimer = toggleTimer;
+        window.resetTimer = resetTimer;
+        window.resetAllCompletions = resetAllCompletions;
+        window.switchMode = switchMode;
+        window.startActivityFromSetup = startActivityFromSetup;
+        window.toggleBgmSetting = toggleBgmSetting;
+
+        window.onload = function() {
+            initFixedData();
+            updateTimerFromInputs();
+            renderKidsGrid();
+        };
+    </script>
+</body>
+</html>
+```
